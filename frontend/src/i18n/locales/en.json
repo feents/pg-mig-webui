@@ -1,0 +1,131 @@
+{
+  "app": {
+    "title": "DB Migration Tool",
+    "subtitle": "PostgreSQL database migration platform",
+    "nav_title": "DB Migration"
+  },
+  "nav": {
+    "connections": "DB Connections",
+    "migrations": "Migration",
+    "admin": "User Management",
+    "logout": "Logout"
+  },
+  "auth": {
+    "login": "Login",
+    "login_loading": "Signing in...",
+    "register": "Sign Up",
+    "register_loading": "Signing up...",
+    "no_account": "Don't have an account?",
+    "have_account": "Already have an account?",
+    "password_confirm": "Confirm Password",
+    "password_mismatch": "Passwords do not match.",
+    "register_success": "Registration complete. You can log in after admin approval.",
+    "go_to_login": "Go to login",
+    "error_login_failed": "Login failed.",
+    "error_register_failed": "Registration failed."
+  },
+  "common": {
+    "email": "Email",
+    "password": "Password",
+    "save": "Save",
+    "saving": "Saving...",
+    "cancel": "Cancel",
+    "edit": "Edit",
+    "delete": "Delete",
+    "approve": "Approve"
+  },
+  "connections": {
+    "title": "DB Connections",
+    "add": "+ New Connection",
+    "empty": "No connections registered.",
+    "add_first": "Add your first connection",
+    "form_title_add": "Add New Connection",
+    "form_title_edit": "Edit Connection",
+    "field_name": "Name",
+    "field_host": "Host",
+    "field_port": "Port",
+    "field_database": "Database",
+    "field_username": "Username",
+    "field_password": "Password",
+    "field_password_edit": "Password (enter only to change)",
+    "field_password_edit_placeholder": "Leave blank to keep current",
+    "vpn_label": "Requires VPN (OpenVPN)",
+    "ovpn_label": ".ovpn file",
+    "ovpn_label_edit": ".ovpn file (upload only to change)",
+    "delete_confirm": "Delete connection \"{{name}}\"?",
+    "error_save_failed": "Failed to save."
+  },
+  "migrations": {
+    "title": "DB Migration",
+    "form_title": "Run Migration",
+    "source": "Source",
+    "target": "Target",
+    "kind_db": "DB Connection",
+    "kind_file_upload": "File Upload",
+    "kind_file_download": "File Download",
+    "select_connection": "Select connection",
+    "file_drop": "Drag or click to select a file (.pgdump)",
+    "download_note": "A download button will appear after migration completes.",
+    "start": "Start Migration",
+    "starting": "Starting...",
+    "error_both_file": "Source and target cannot both be files.",
+    "error_same": "Source and target are the same.",
+    "error_no_file": "Please select a dump file.",
+    "error_no_target": "Please select a target DB.",
+    "error_start_failed": "Failed to start migration."
+  },
+  "progress": {
+    "title": "Job #{{id}} Progress",
+    "status_pending": "Pending",
+    "status_running": "Running",
+    "status_success": "Completed",
+    "status_failed": "Failed",
+    "log_waiting": "Waiting for logs...",
+    "download": "↓ Download Dump File"
+  },
+  "history": {
+    "title": "Migration History",
+    "col_source": "Source",
+    "col_target": "Target",
+    "col_status": "Status",
+    "col_progress": "Progress",
+    "col_duration": "Duration",
+    "view_log": "View Log",
+    "file_upload": "File Upload",
+    "file_download": "File Download",
+    "deleted": "(deleted)",
+    "duration_sec": "{{sec}}s",
+    "duration_min": "{{min}}m {{sec}}s"
+  },
+  "admin": {
+    "title": "User Approval Management",
+    "empty": "No users pending approval.",
+    "pending_label": "Pending Approval"
+  },
+  "errors": {
+    "auth": {
+      "email_already_exists": "Email already in use.",
+      "invalid_credentials": "Invalid email or password.",
+      "pending_approval": "Your account is pending approval. Please wait for admin review.",
+      "unauthorized": "Authentication failed."
+    },
+    "connections": {
+      "not_found": "Connection not found."
+    },
+    "migrations": {
+      "not_found": "Job not found.",
+      "source_conn_required": "Source connection is required.",
+      "source_not_found": "Source connection not found.",
+      "target_conn_required": "Target connection is required.",
+      "target_not_found": "Target connection not found.",
+      "same_source_target": "Source and target are the same.",
+      "not_file_target": "This job does not have a file download target.",
+      "not_completed": "Job not yet completed.",
+      "dump_not_found": "Dump file not found."
+    },
+    "admin": {
+      "forbidden": "Admin privileges required.",
+      "user_not_found": "User not found."
+    }
+  }
+}

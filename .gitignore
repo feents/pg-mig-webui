@@ -1,0 +1,18 @@
+# Environment variables
+.env
+
+# Data (SQLite) — keep directory structure, ignore actual data files
+data/*
+!data/.gitkeep
+
+# Frontend build output
+frontend/dist/
+frontend/node_modules/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# macOS
+.DS_Store

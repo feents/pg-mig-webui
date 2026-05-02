@@ -1,0 +1,131 @@
+{
+  "app": {
+    "title": "DB 이관 도구",
+    "subtitle": "PostgreSQL 데이터베이스 이관 플랫폼",
+    "nav_title": "DB 이관"
+  },
+  "nav": {
+    "connections": "DB 접속 정보",
+    "migrations": "이관 실행",
+    "admin": "회원 관리",
+    "logout": "로그아웃"
+  },
+  "auth": {
+    "login": "로그인",
+    "login_loading": "로그인 중...",
+    "register": "회원가입",
+    "register_loading": "가입 중...",
+    "no_account": "계정이 없으신가요?",
+    "have_account": "이미 계정이 있으신가요?",
+    "password_confirm": "비밀번호 확인",
+    "password_mismatch": "비밀번호가 일치하지 않습니다.",
+    "register_success": "가입이 완료되었습니다. 관리자 승인 후 로그인할 수 있습니다.",
+    "go_to_login": "로그인 페이지로 이동",
+    "error_login_failed": "로그인에 실패했습니다.",
+    "error_register_failed": "회원가입에 실패했습니다."
+  },
+  "common": {
+    "email": "이메일",
+    "password": "비밀번호",
+    "save": "저장",
+    "saving": "저장 중...",
+    "cancel": "취소",
+    "edit": "수정",
+    "delete": "삭제",
+    "approve": "승인"
+  },
+  "connections": {
+    "title": "DB 접속 정보",
+    "add": "+ 새 접속 정보",
+    "empty": "등록된 접속 정보가 없습니다.",
+    "add_first": "첫 번째 접속 정보 추가하기",
+    "form_title_add": "새 접속 정보 추가",
+    "form_title_edit": "접속 정보 수정",
+    "field_name": "이름",
+    "field_host": "호스트",
+    "field_port": "포트",
+    "field_database": "데이터베이스",
+    "field_username": "사용자명",
+    "field_password": "비밀번호",
+    "field_password_edit": "비밀번호 (변경 시에만 입력)",
+    "field_password_edit_placeholder": "변경하지 않으면 비워두세요",
+    "vpn_label": "VPN 필요 (OpenVPN)",
+    "ovpn_label": ".ovpn 파일",
+    "ovpn_label_edit": ".ovpn 파일 (변경 시에만 업로드)",
+    "delete_confirm": "\"{{name}}\" 접속 정보를 삭제하시겠습니까?",
+    "error_save_failed": "저장에 실패했습니다."
+  },
+  "migrations": {
+    "title": "DB 이관",
+    "form_title": "이관 실행",
+    "source": "소스",
+    "target": "대상",
+    "kind_db": "DB 접속정보",
+    "kind_file_upload": "파일 업로드",
+    "kind_file_download": "파일 다운로드",
+    "select_connection": "접속 정보 선택",
+    "file_drop": "파일을 드래그하거나 클릭하여 선택 (.pgdump)",
+    "download_note": "이관 완료 후 덤프 파일(.pgdump) 다운로드 버튼이 표시됩니다.",
+    "start": "이관 시작",
+    "starting": "시작 중...",
+    "error_both_file": "소스와 대상 모두 파일로 선택할 수 없습니다.",
+    "error_same": "소스와 대상이 같습니다.",
+    "error_no_file": "덤프 파일을 선택해주세요.",
+    "error_no_target": "대상 DB를 선택해주세요.",
+    "error_start_failed": "이관 시작에 실패했습니다."
+  },
+  "progress": {
+    "title": "작업 #{{id}} 진행 상황",
+    "status_pending": "대기 중",
+    "status_running": "실행 중",
+    "status_success": "완료",
+    "status_failed": "실패",
+    "log_waiting": "로그를 기다리는 중...",
+    "download": "↓ 덤프 파일 다운로드"
+  },
+  "history": {
+    "title": "이관 이력",
+    "col_source": "소스",
+    "col_target": "대상",
+    "col_status": "상태",
+    "col_progress": "진행률",
+    "col_duration": "소요 시간",
+    "view_log": "로그 보기",
+    "file_upload": "파일 업로드",
+    "file_download": "파일 다운로드",
+    "deleted": "(삭제됨)",
+    "duration_sec": "{{sec}}초",
+    "duration_min": "{{min}}분 {{sec}}초"
+  },
+  "admin": {
+    "title": "회원 승인 관리",
+    "empty": "승인 대기 중인 회원이 없습니다.",
+    "pending_label": "승인 대기 중"
+  },
+  "errors": {
+    "auth": {
+      "email_already_exists": "이미 사용 중인 이메일입니다.",
+      "invalid_credentials": "이메일 또는 비밀번호가 올바르지 않습니다.",
+      "pending_approval": "승인 대기 중입니다. 관리자의 승인을 기다려 주세요.",
+      "unauthorized": "인증에 실패했습니다."
+    },
+    "connections": {
+      "not_found": "접속 정보를 찾을 수 없습니다."
+    },
+    "migrations": {
+      "not_found": "작업을 찾을 수 없습니다.",
+      "source_conn_required": "소스 접속 정보가 필요합니다.",
+      "source_not_found": "소스 접속 정보를 찾을 수 없습니다.",
+      "target_conn_required": "대상 접속 정보가 필요합니다.",
+      "target_not_found": "대상 접속 정보를 찾을 수 없습니다.",
+      "same_source_target": "소스와 대상이 같습니다.",
+      "not_file_target": "파일 다운로드 대상이 아닌 작업입니다.",
+      "not_completed": "아직 완료되지 않은 작업입니다.",
+      "dump_not_found": "덤프 파일을 찾을 수 없습니다."
+    },
+    "admin": {
+      "forbidden": "관리자 권한이 필요합니다.",
+      "user_not_found": "사용자를 찾을 수 없습니다."
+    }
+  }
+}
