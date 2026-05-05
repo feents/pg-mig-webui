@@ -34,6 +34,8 @@ export default function ConnectionForm({ onSaved, onCancel, existing }: Props) {
   });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [testStatus, setTestStatus] = useState<null | "testing" | "ok" | "error">(null);
+  const [testMessage, setTestMessage] = useState("");
 
   function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -41,6 +43,39 @@ export default function ConnectionForm({ onSaved, onCancel, existing }: Props) {
     const reader = new FileReader();
     reader.onload = (ev) => setForm((f) => ({ ...f, ovpn_content: ev.target?.result as string }));
     reader.readAsText(file);
+  }
+
+  async function handleTest() {
+    setTestStatus("testing");
+    setTestMessage("");
+    try {
+      let res;
+      if (isEdit && !form.password) {
+        res = await api.post(`/connections/${existing!.id}/test`);
+      } else {
+        if (!form.password) {
+          setTestStatus("error");
+          setTestMessage(t("connections.test_error_password_required"));
+          return;
+        }
+        res = await api.post("/connections/test", {
+          host: form.host,
+          port: Number(form.port),
+          database: form.database,
+          username: form.username,
+          password: form.password,
+        });
+      }
+      if (res.data.ok) {
+        setTestStatus("ok");
+      } else {
+        setTestStatus("error");
+        setTestMessage(res.data.detail ?? "");
+      }
+    } catch (err: any) {
+      setTestStatus("error");
+      setTestMessage(err.response?.data?.detail ?? "");
+    }
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -134,21 +169,41 @@ export default function ConnectionForm({ onSaved, onCancel, existing }: Props) {
               />
             </div>
           )}
-          <div className="flex gap-2 pt-2">
-            <button
-              type="submit"
-              disabled={loading}
-              className="flex-1 bg-feents text-white py-2 rounded-lg text-sm font-semibold hover:bg-feents-600 disabled:opacity-50 transition-colors duration-150"
-            >
-              {loading ? t("common.saving") : t("common.save")}
-            </button>
+          <div className="pt-2 space-y-2">
             <button
               type="button"
-              onClick={onCancel}
-              className="flex-1 border border-fs-200 py-2 rounded-lg text-sm font-semibold hover:bg-fs-50 text-fs-700 transition-colors duration-150"
+              onClick={handleTest}
+              disabled={testStatus === "testing"}
+              className="w-full border border-feents text-feents py-2 rounded-lg text-sm font-semibold hover:bg-feents/5 disabled:opacity-50 transition-colors duration-150"
             >
-              {t("common.cancel")}
+              {testStatus === "testing" ? t("connections.test_testing") : t("connections.test_btn")}
             </button>
+            {testStatus === "ok" && (
+              <p className="text-sm text-[#22863A] bg-[#E6F4EA] border border-[#22863A]/30 px-3 py-2 rounded-lg">
+                ✓ {t("connections.test_ok")}
+              </p>
+            )}
+            {testStatus === "error" && (
+              <p className="text-sm text-[#E54B4B] bg-[#FCE9E9] border border-[#E54B4B]/30 px-3 py-2 rounded-lg break-all">
+                ✗ {t("connections.test_fail")}{testMessage ? `: ${testMessage}` : ""}
+              </p>
+            )}
+            <div className="flex gap-2">
+              <button
+                type="submit"
+                disabled={loading}
+                className="flex-1 bg-feents text-white py-2 rounded-lg text-sm font-semibold hover:bg-feents-600 disabled:opacity-50 transition-colors duration-150"
+              >
+                {loading ? t("common.saving") : t("common.save")}
+              </button>
+              <button
+                type="button"
+                onClick={onCancel}
+                className="flex-1 border border-fs-200 py-2 rounded-lg text-sm font-semibold hover:bg-fs-50 text-fs-700 transition-colors duration-150"
+              >
+                {t("common.cancel")}
+              </button>
+            </div>
           </div>
         </form>
       </div>

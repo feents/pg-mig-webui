@@ -1,14 +1,29 @@
-from typing import List
+from typing import Any, Dict, List
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
+
+import psycopg2
 
 from app.auth import get_current_user
 from app.crypto import decrypt, encrypt
 from app.database import get_db
 from app.models import DbConnection, User
-from app.schemas.connection import DbConnectionCreate, DbConnectionResponse, DbConnectionUpdate
+from app.schemas.connection import DbConnectionCreate, DbConnectionResponse, DbConnectionTest, DbConnectionUpdate
 
 router = APIRouter(prefix="/api/connections", tags=["connections"])
+
+
+def _pg_test(host: str, port: int, database: str, username: str, password: str) -> Dict[str, Any]:
+    try:
+        conn = psycopg2.connect(
+            host=host, port=port, dbname=database,
+            user=username, password=password,
+            connect_timeout=5,
+        )
+        conn.close()
+        return {"ok": True}
+    except Exception as exc:
+        return {"ok": False, "detail": str(exc)}
 
 
 def _get_owned(conn_id: int, user: User, db: Session) -> DbConnection:
@@ -16,6 +31,21 @@ def _get_owned(conn_id: int, user: User, db: Session) -> DbConnection:
     if not conn:
         raise HTTPException(status_code=404, detail="connections.not_found")
     return conn
+
+
+@router.post("/test")
+def test_connection(body: DbConnectionTest, current_user: User = Depends(get_current_user)):
+    return _pg_test(body.host, body.port, body.database, body.username, body.password)
+
+
+@router.post("/{conn_id}/test")
+def test_saved_connection(
+    conn_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    conn = _get_owned(conn_id, current_user, db)
+    return _pg_test(conn.host, conn.port, conn.database, conn.username, decrypt(conn.password_enc))
 
 
 @router.post("", response_model=DbConnectionResponse, status_code=status.HTTP_201_CREATED)

@@ -53,7 +53,12 @@
     "ovpn_label": ".ovpn file",
     "ovpn_label_edit": ".ovpn file (upload only to change)",
     "delete_confirm": "Delete connection \"{{name}}\"?",
-    "error_save_failed": "Failed to save."
+    "error_save_failed": "Failed to save.",
+    "test_btn": "Test Connection",
+    "test_testing": "Testing...",
+    "test_ok": "Connection successful",
+    "test_fail": "Connection failed",
+    "test_error_password_required": "Password is required to test the connection."
   },
   "migrations": {
     "title": "DB Migration",

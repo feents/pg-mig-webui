@@ -25,6 +25,14 @@ class DbConnectionUpdate(BaseModel):
     ovpn_content: Optional[str] = None
 
 
+class DbConnectionTest(BaseModel):
+    host: str
+    port: int = 5432
+    database: str
+    username: str
+    password: str
+
+
 class DbConnectionResponse(BaseModel):
     id: int
     user_id: int

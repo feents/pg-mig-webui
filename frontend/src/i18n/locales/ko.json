@@ -53,7 +53,12 @@
     "ovpn_label": ".ovpn 파일",
     "ovpn_label_edit": ".ovpn 파일 (변경 시에만 업로드)",
     "delete_confirm": "\"{{name}}\" 접속 정보를 삭제하시겠습니까?",
-    "error_save_failed": "저장에 실패했습니다."
+    "error_save_failed": "저장에 실패했습니다.",
+    "test_btn": "접속 테스트",
+    "test_testing": "테스트 중...",
+    "test_ok": "접속 성공",
+    "test_fail": "접속 실패",
+    "test_error_password_required": "비밀번호를 입력해야 테스트할 수 있습니다."
   },
   "migrations": {
     "title": "DB 이관",
