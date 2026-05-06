@@ -105,7 +105,8 @@ def _start_vpn(ovpn_content: str, target_host: str, job_id: int, prefix: str) ->
     pid_path = OVPN_DIR / f"vpn_{prefix}_{job_id}.pid"
 
     # 서버가 DB 호스트 라우트를 push하지 않을 수 있어, 클라이언트 측에서 강제로 추가
-    augmented = ovpn_content.rstrip() + f"\nroute {target_host} 255.255.255.255 vpn_gateway\n"
+    # verb 5로 raise해서 route 처리 로그를 확실히 남김
+    augmented = ovpn_content.rstrip() + f"\nverb 5\nroute {target_host} 255.255.255.255\n"
     ovpn_path.write_text(augmented)
     proc = subprocess.Popen(
         ["openvpn", "--daemon",
@@ -166,7 +167,7 @@ def run_migration(job_id: int):
 
             # 소스 VPN 연결
             if src.use_vpn and src.ovpn_content_enc:
-                _update_job(db, job, "running", 5, "소스 OpenVPN 연결 중...")
+                _update_job(db, job, "running", 5, f"소스 OpenVPN 연결 중... (host route: {src.host})")
                 src_vpn_proc, src_ovpn_path, src_log_path, src_pid_path = _start_vpn(decrypt(src.ovpn_content_enc), src.host, job_id, "src")
                 if not _wait_for_vpn_ready(src_log_path):
                     vpn_log = src_log_path.read_text(errors="ignore") if src_log_path.exists() else "(로그 없음)"
