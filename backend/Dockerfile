@@ -10,7 +10,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
        > /etc/apt/sources.list.d/pgdg.list \
     && apt-get update && apt-get install -y --no-install-recommends \
         openvpn \
-        postgresql-client-17 \
+        postgresql-client-18 \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
