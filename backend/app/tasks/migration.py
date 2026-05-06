@@ -98,12 +98,15 @@ def _wait_for_vpn_ready(log_path: Path, timeout: int = 60) -> bool:
     return False
 
 
-def _start_vpn(ovpn_content: str, job_id: int, prefix: str) -> tuple[subprocess.Popen, Path, Path, Path]:
+def _start_vpn(ovpn_content: str, target_host: str, job_id: int, prefix: str) -> tuple[subprocess.Popen, Path, Path, Path]:
     OVPN_DIR.mkdir(parents=True, exist_ok=True)
     ovpn_path = OVPN_DIR / f"vpn_{prefix}_{job_id}.ovpn"
     log_path = OVPN_DIR / f"vpn_{prefix}_{job_id}.log"
     pid_path = OVPN_DIR / f"vpn_{prefix}_{job_id}.pid"
-    ovpn_path.write_text(ovpn_content)
+
+    # 서버가 DB 호스트 라우트를 push하지 않을 수 있어, 클라이언트 측에서 강제로 추가
+    augmented = ovpn_content.rstrip() + f"\nroute {target_host} 255.255.255.255 vpn_gateway\n"
+    ovpn_path.write_text(augmented)
     proc = subprocess.Popen(
         ["openvpn", "--daemon",
          "--log", str(log_path),
@@ -164,7 +167,7 @@ def run_migration(job_id: int):
             # 소스 VPN 연결
             if src.use_vpn and src.ovpn_content_enc:
                 _update_job(db, job, "running", 5, "소스 OpenVPN 연결 중...")
-                src_vpn_proc, src_ovpn_path, src_log_path, src_pid_path = _start_vpn(decrypt(src.ovpn_content_enc), job_id, "src")
+                src_vpn_proc, src_ovpn_path, src_log_path, src_pid_path = _start_vpn(decrypt(src.ovpn_content_enc), src.host, job_id, "src")
                 if not _wait_for_vpn_ready(src_log_path):
                     vpn_log = src_log_path.read_text(errors="ignore") if src_log_path.exists() else "(로그 없음)"
                     raise RuntimeError(f"소스 OpenVPN 연결 타임아웃 (60초)\n{vpn_log}")
@@ -209,7 +212,7 @@ def run_migration(job_id: int):
             # 대상 VPN 연결
             if tgt.use_vpn and tgt.ovpn_content_enc:
                 _update_job(db, job, "running", 40, "대상 OpenVPN 연결 중...")
-                tgt_vpn_proc, tgt_ovpn_path, tgt_log_path, tgt_pid_path = _start_vpn(decrypt(tgt.ovpn_content_enc), job_id, "tgt")
+                tgt_vpn_proc, tgt_ovpn_path, tgt_log_path, tgt_pid_path = _start_vpn(decrypt(tgt.ovpn_content_enc), tgt.host, job_id, "tgt")
                 if not _wait_for_vpn_ready(tgt_log_path):
                     vpn_log = tgt_log_path.read_text(errors="ignore") if tgt_log_path.exists() else "(로그 없음)"
                     raise RuntimeError(f"대상 OpenVPN 연결 타임아웃 (60초)\n{vpn_log}")
