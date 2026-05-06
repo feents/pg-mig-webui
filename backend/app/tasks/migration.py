@@ -87,8 +87,7 @@ def _run_streamed(
 
 def _wait_for_tun(timeout: int = 30) -> bool:
     for _ in range(timeout):
-        rc, out = _run(["ip", "link", "show", "tun0"])
-        if rc == 0:
+        if Path("/sys/class/net/tun0").exists():
             return True
         time.sleep(1)
     return False
