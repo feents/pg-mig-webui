@@ -85,34 +85,38 @@ def _run_streamed(
     return proc.returncode, "\n".join(lines)
 
 
-def _wait_for_tun(timeout: int = 30) -> bool:
+def _wait_for_vpn_ready(log_path: Path, timeout: int = 60) -> bool:
     for _ in range(timeout):
-        if Path("/sys/class/net/tun0").exists():
-            return True
+        if log_path.exists():
+            try:
+                if "Initialization Sequence Completed" in log_path.read_text(errors="ignore"):
+                    return True
+            except OSError:
+                pass
         time.sleep(1)
     return False
 
 
-def _start_vpn(ovpn_content: str, job_id: int, prefix: str) -> tuple[subprocess.Popen, Path]:
+def _start_vpn(ovpn_content: str, job_id: int, prefix: str) -> tuple[subprocess.Popen, Path, Path]:
     OVPN_DIR.mkdir(parents=True, exist_ok=True)
     ovpn_path = OVPN_DIR / f"vpn_{prefix}_{job_id}.ovpn"
+    log_path = OVPN_DIR / f"vpn_{prefix}_{job_id}.log"
     ovpn_path.write_text(ovpn_content)
     proc = subprocess.Popen(
         ["openvpn", "--daemon",
-         "--log", str(OVPN_DIR / f"vpn_{prefix}_{job_id}.log"),
+         "--log", str(log_path),
          "--config", str(ovpn_path)],
     )
-    return proc, ovpn_path
+    return proc, ovpn_path, log_path
 
 
-def _stop_vpn(vpn_proc: subprocess.Popen | None, ovpn_path: Path):
+def _stop_vpn(vpn_proc: subprocess.Popen | None, ovpn_path: Path, log_path: Path):
     if vpn_proc:
         try:
             vpn_proc.terminate()
         except Exception:
             pass
         _run(["pkill", "-f", ovpn_path.name])
-    log_path = ovpn_path.with_suffix(".log")
     for p in [ovpn_path, log_path]:
         try:
             p.unlink(missing_ok=True)
@@ -126,8 +130,10 @@ def run_migration(job_id: int):
     db = SessionLocal()
     src_vpn_proc: subprocess.Popen | None = None
     src_ovpn_path: Path = OVPN_DIR / f"vpn_src_{job_id}.ovpn"
+    src_log_path: Path = OVPN_DIR / f"vpn_src_{job_id}.log"
     tgt_vpn_proc: subprocess.Popen | None = None
     tgt_ovpn_path: Path = OVPN_DIR / f"vpn_tgt_{job_id}.ovpn"
+    tgt_log_path: Path = OVPN_DIR / f"vpn_tgt_{job_id}.log"
 
     try:
         job = db.query(MigrationJob).filter(MigrationJob.id == job_id).first()
@@ -148,9 +154,9 @@ def run_migration(job_id: int):
             # 소스 VPN 연결
             if src.use_vpn and src.ovpn_content_enc:
                 _update_job(db, job, "running", 5, "소스 OpenVPN 연결 중...")
-                src_vpn_proc, src_ovpn_path = _start_vpn(decrypt(src.ovpn_content_enc), job_id, "src")
-                if not _wait_for_tun():
-                    raise RuntimeError("소스 OpenVPN tun 인터페이스 생성 타임아웃 (30초)")
+                src_vpn_proc, src_ovpn_path, src_log_path = _start_vpn(decrypt(src.ovpn_content_enc), job_id, "src")
+                if not _wait_for_vpn_ready(src_log_path):
+                    raise RuntimeError("소스 OpenVPN 연결 타임아웃 (60초)")
                 _update_job(db, job, "running", 10, "소스 OpenVPN 연결 완료")
 
             _update_job(db, job, "running", 10, "pg_dump 시작...")
@@ -174,7 +180,7 @@ def run_migration(job_id: int):
 
             # 소스 VPN 종료 (대상 VPN과 tun 충돌 방지)
             if src_vpn_proc:
-                _stop_vpn(src_vpn_proc, src_ovpn_path)
+                _stop_vpn(src_vpn_proc, src_ovpn_path, src_log_path)
                 src_vpn_proc = None
 
         else:  # src_kind == "file"
@@ -191,9 +197,9 @@ def run_migration(job_id: int):
             # 대상 VPN 연결
             if tgt.use_vpn and tgt.ovpn_content_enc:
                 _update_job(db, job, "running", 40, "대상 OpenVPN 연결 중...")
-                tgt_vpn_proc, tgt_ovpn_path = _start_vpn(decrypt(tgt.ovpn_content_enc), job_id, "tgt")
-                if not _wait_for_tun():
-                    raise RuntimeError("대상 OpenVPN tun 인터페이스 생성 타임아웃 (30초)")
+                tgt_vpn_proc, tgt_ovpn_path, tgt_log_path = _start_vpn(decrypt(tgt.ovpn_content_enc), job_id, "tgt")
+                if not _wait_for_vpn_ready(tgt_log_path):
+                    raise RuntimeError("대상 OpenVPN 연결 타임아웃 (60초)")
                 _update_job(db, job, "running", 50, "대상 OpenVPN 연결 완료")
 
             # pg_restore
@@ -231,8 +237,8 @@ def run_migration(job_id: int):
 
     finally:
         # VPN 종료
-        _stop_vpn(src_vpn_proc, src_ovpn_path)
-        _stop_vpn(tgt_vpn_proc, tgt_ovpn_path)
+        _stop_vpn(src_vpn_proc, src_ovpn_path, src_log_path)
+        _stop_vpn(tgt_vpn_proc, tgt_ovpn_path, tgt_log_path)
 
         # 덤프 파일: 파일 다운로드 대상이면 보존, 아니면 삭제
         try:
