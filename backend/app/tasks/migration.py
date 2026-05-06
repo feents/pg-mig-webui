@@ -1,5 +1,6 @@
 import json
 import os
+import re
 import signal
 import subprocess
 import threading
@@ -33,10 +34,44 @@ def _update_job(db, job: MigrationJob, status: str, progress: float, log: str):
         job.log_text += f"\n{log}"
     else:
         job.log_text = log
-    if status in ("success", "failed"):
+    if status in ("success", "success_with_warnings", "failed"):
         job.finished_at = datetime.utcnow()
     db.commit()
     _publish(job.id, progress, status, log, target_kind=job.target_kind)
+
+
+_RESTORE_IGNORED_RE = re.compile(r"errors ignored on restore:\s*(\d+)", re.IGNORECASE)
+_RESTORE_FATAL_PATTERNS = (
+    "could not connect to",
+    "FATAL:",
+    "connection to server",
+    "no password supplied",
+    "authentication failed",
+    "database \"",  # e.g. database "x" does not exist
+    "input file appears",
+    "out of memory",
+)
+
+
+def _parse_restore_outcome(out: str) -> tuple[int | None, list[str]]:
+    """Parse pg_restore output. Returns (ignored_count, failed_toc_entries).
+    ignored_count is None if the standard 'errors ignored on restore' summary is absent.
+    failed_toc_entries lists the 'from TOC entry ...' lines for context.
+    """
+    ignored: int | None = None
+    m = _RESTORE_IGNORED_RE.search(out)
+    if m:
+        try:
+            ignored = int(m.group(1))
+        except ValueError:
+            ignored = None
+    failed = [line.strip() for line in out.splitlines() if "from TOC entry" in line]
+    return ignored, failed
+
+
+def _restore_has_fatal(out: str) -> bool:
+    lowered = out.lower()
+    return any(p.lower() in lowered for p in _RESTORE_FATAL_PATTERNS)
 
 
 def _run(cmd: list[str], env: dict | None = None) -> tuple[int, str]:
@@ -158,6 +193,7 @@ def run_migration(job_id: int):
 
         src_kind = job.source_kind
         tgt_kind = job.target_kind
+        has_warnings = False
 
         # 소스 처리
         if src_kind == "db":
@@ -235,16 +271,34 @@ def run_migration(job_id: int):
                 env={"PGPASSWORD": tgt_password},
                 target_kind=tgt_kind,
             )
-            if rc != 0:
+            ignored_count, failed_toc = _parse_restore_outcome(out)
+            partial_ok = rc != 0 and ignored_count is not None and not _restore_has_fatal(out)
+            if rc != 0 and not partial_ok:
                 raise RuntimeError(f"pg_restore 실패:\n{out}")
-            _update_job(db, job, "running", 80, "pg_restore 완료")
+            if partial_ok:
+                _update_job(
+                    db, job, "running", 80,
+                    f"pg_restore 부분 완료: 무시된 오류 {ignored_count}건 "
+                    f"(주로 확장(extension) 버전 불일치로 인한 MATERIALIZED VIEW REFRESH 실패 등).",
+                )
+                if failed_toc:
+                    _update_job(db, job, "running", 80, "실패 항목:")
+                    for entry in failed_toc[:10]:
+                        _update_job(db, job, "running", 80, f"  - {entry}")
+                    if len(failed_toc) > 10:
+                        _update_job(db, job, "running", 80, f"  ... 외 {len(failed_toc) - 10}건")
+                has_warnings = True
+            else:
+                _update_job(db, job, "running", 80, "pg_restore 완료")
 
         else:  # tgt_kind == "file"
             job.target_file_path = str(dump_path)
             db.commit()
             _update_job(db, job, "running", 80, f"덤프 파일 준비 완료: {dump_path.name}")
 
-        _update_job(db, job, "success", 100, "이관 완료")
+        final_status = "success_with_warnings" if has_warnings else "success"
+        final_log = "이관 완료 (경고 포함)" if has_warnings else "이관 완료"
+        _update_job(db, job, final_status, 100, final_log)
 
     except Exception as exc:
         try:

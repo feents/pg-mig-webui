@@ -84,6 +84,7 @@
     "status_pending": "대기 중",
     "status_running": "실행 중",
     "status_success": "완료",
+    "status_success_with_warnings": "완료 (경고)",
     "status_failed": "실패",
     "log_waiting": "로그를 기다리는 중...",
     "download": "↓ 덤프 파일 다운로드"

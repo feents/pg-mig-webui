@@ -12,6 +12,7 @@ const STATUS_COLORS: Record<string, string> = {
   pending: "bg-fs-100 text-fs-500",
   running: "bg-[#E8F0FF] text-[#4C8BFF]",
   success: "bg-[#E5F6F0] text-[#16A37B]",
+  success_with_warnings: "bg-[#FFF4E0] text-[#B8770C]",
   failed: "bg-[#FCE9E9] text-[#E54B4B]",
 };
 
@@ -19,6 +20,7 @@ const BAR_COLORS: Record<string, string> = {
   pending: "bg-fs-300",
   running: "bg-feents",
   success: "bg-[#16A37B]",
+  success_with_warnings: "bg-[#E89B2C]",
   failed: "bg-[#E54B4B]",
 };
 
@@ -51,8 +53,8 @@ export default function MigrationProgress({ jobId, initialTargetKind }: Props) {
     }
   }, [logs]);
 
-  const isDone = status === "success" || status === "failed";
-  const showDownload = isDone && status === "success" && targetKind === "file";
+  const isDone = status === "success" || status === "success_with_warnings" || status === "failed";
+  const showDownload = isDone && (status === "success" || status === "success_with_warnings") && targetKind === "file";
 
   async function handleDownload() {
     const { data } = await api.get(`/migrations/${jobId}/download`, { responseType: "blob" });

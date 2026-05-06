@@ -20,6 +20,7 @@ const STATUS_COLORS: Record<string, string> = {
   pending: "text-fs-500 bg-fs-100",
   running: "text-[#4C8BFF] bg-[#E8F0FF]",
   success: "text-[#16A37B] bg-[#E5F6F0]",
+  success_with_warnings: "text-[#B8770C] bg-[#FFF4E0]",
   failed: "text-[#E54B4B] bg-[#FCE9E9]",
 };
 

@@ -49,7 +49,7 @@ class MigrationJob(Base):
     target_file_path: Mapped[str | None] = mapped_column(Text, nullable=True)
     source_conn_name: Mapped[str | None] = mapped_column(String, nullable=True)
     target_conn_name: Mapped[str | None] = mapped_column(String, nullable=True)
-    status: Mapped[str] = mapped_column(String, default="pending")   # pending|running|success|failed
+    status: Mapped[str] = mapped_column(String, default="pending")   # pending|running|success|success_with_warnings|failed
     progress_pct: Mapped[float] = mapped_column(Float, default=0.0)
     log_text: Mapped[str | None] = mapped_column(Text, nullable=True)
     started_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
